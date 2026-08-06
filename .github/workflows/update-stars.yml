@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
   update-stars:
@@ -26,12 +25,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python scripts/update_stars.py --readme README.md
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v7
-        with:
-          branch: chore/update-stars
-          commit-message: "chore: update GitHub star counts"
-          title: "chore: update GitHub star counts"
-          body: "Automated update of GitHub repository star counts in README."
-          labels: automation
-          delete-branch: true
+      - name: Commit and push updates
+        run: |
+          if git diff --quiet -- README.md; then
+            echo "README already up to date."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "chore: update GitHub star counts"
+          git push origin HEAD:main
